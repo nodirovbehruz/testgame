@@ -129,6 +129,10 @@
     border: 1px solid rgba(255,255,255,.14);
     box-shadow: none;
   }
+  button:active {
+    transform: scale(0.96);
+    filter: brightness(1.1);
+  }
   .hidden { display: none !important; }
   @media (max-width: 720px) {
     .cards { grid-template-columns: 1fr; }
@@ -412,8 +416,8 @@ function pointerPos(e) {
 }
 function startTouch(e) {
   if (game.state !== 'playing') return;
-  // Don't intercept touches on buttons or menu panels
-  if (e.target.closest('button') || e.target.closest('.panel')) return;
+  // Don't intercept touches on UI elements
+  if (e.target.closest('button') || e.target.closest('.panel') || e.target.closest('.topButtons')) return;
 
   const p = pointerPos(e);
   if (p.x > W * .62 && p.y < 90) return;
@@ -423,7 +427,6 @@ function startTouch(e) {
   const now = performance.now()/1000;
   if (now - input.lastTap < .28) tryDash();
   input.lastTap = now;
-  if (e.cancelable) e.preventDefault();
 }
 function moveTouch(e) {
   if (!input.touching) return;
@@ -590,7 +593,8 @@ function openUpgradeChoice(count=3) {
     div.innerHTML = `<h3>${u.name}</h3><p>${u.desc}</p><p>Уровень: ${current}/${u.max}</p>`;
     const b = document.createElement('button');
     b.textContent = 'Взять';
-    const applyUpgrade = () => {
+    const applyUpgrade = (e) => {
+      if (e) { e.preventDefault(); e.stopPropagation(); }
       if (game.state !== 'levelup') return;
       player.upgrades[u.id] = current + 1;
       u.apply(player);
@@ -599,8 +603,7 @@ function openUpgradeChoice(count=3) {
       game.message = u.name;
       game.messageTimer = 1.4;
     };
-    b.onclick = applyUpgrade;
-    b.addEventListener('touchend', (e) => { e.preventDefault(); applyUpgrade(); }, {passive:false});
+    b.onpointerdown = applyUpgrade;
     div.appendChild(b);
     upgradeCards.appendChild(div);
   }
@@ -1016,19 +1019,13 @@ function bindTap(id, fn) {
   if (!el) return;
   let lastRun = 0;
   const run = (e) => {
+    if (e) { e.preventDefault(); e.stopPropagation(); }
     const now = performance.now();
     if (now - lastRun < 180) return;
     lastRun = now;
-    if (e) {
-      e.preventDefault();
-      e.stopPropagation();
-    }
     fn();
   };
-  el.onclick = run;
-  el.addEventListener('click', run, {passive:false});
-  el.addEventListener('touchend', run, {passive:false});
-  el.addEventListener('pointerup', run, {passive:false});
+  el.onpointerdown = run;
 }
 
 window.addEventListener('error', (e) => {

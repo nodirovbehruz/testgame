@@ -5,7 +5,7 @@
 <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1, user-scalable=no, viewport-fit=cover" />
 <meta name="apple-mobile-web-app-capable" content="yes" />
 <meta name="mobile-web-app-capable" content="yes" />
-<title>Train Survivor Offline</title>
+<title>Cosmo Survivor Offline</title>
 <style>
   html, body {
     margin: 0;
@@ -13,7 +13,7 @@
     width: 100%;
     height: 100%;
     overflow: hidden;
-    background: #080b10;
+    background: #090a14;
     font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Arial, sans-serif;
     color: #fff;
     touch-action: none;
@@ -26,7 +26,7 @@
     width: 100vw;
     height: 100vh;
     display: block;
-    background: radial-gradient(circle at center, #151a22 0%, #080b10 70%);
+    background: radial-gradient(circle at center, #1b2040 0%, #090a14 72%);
   }
   .overlay {
     position: fixed;
@@ -36,7 +36,7 @@
     justify-content: center;
     padding: 18px;
     box-sizing: border-box;
-    background: radial-gradient(circle at 50% 35%, rgba(55,80,120,.22), rgba(0,0,0,.86));
+    background: radial-gradient(circle at 50% 28%, rgba(87,84,190,.30), rgba(0,0,0,.88));
     z-index: 5;
   }
   .panel {
@@ -49,6 +49,7 @@
     border-radius: 24px;
     padding: 22px;
     box-sizing: border-box;
+    backdrop-filter: blur(14px);
   }
   .title {
     font-size: clamp(30px, 7vw, 58px);
@@ -78,8 +79,8 @@
     font-size: 16px;
     font-weight: 800;
     color: #061014;
-    background: linear-gradient(180deg, #f6ff7a, #86ffcc);
-    box-shadow: 0 10px 28px rgba(129,255,197,.20);
+    background: linear-gradient(180deg, #7be8ff, #8dffb2);
+    box-shadow: 0 10px 30px rgba(123,232,255,.23);
     cursor: pointer;
   }
   button.secondary {
@@ -96,12 +97,15 @@
   }
   .card {
     padding: 16px;
-    border-radius: 18px;
+    border-radius: 20px;
     background: linear-gradient(180deg, rgba(255,255,255,.11), rgba(255,255,255,.045));
     border: 1px solid rgba(255,255,255,.13);
     min-height: 154px;
     box-sizing: border-box;
+    cursor: pointer;
+    -webkit-tap-highlight-color: transparent;
   }
+  .card:active { transform: scale(.995); }
   .card h3 { margin: 0 0 8px; font-size: 18px; }
   .card p { margin: 0 0 12px; color: rgba(255,255,255,.70); font-size: 14px; line-height: 1.35; }
   .card button { width: 100%; padding: 12px; font-size: 14px; }
@@ -128,10 +132,6 @@
     border: 1px solid rgba(255,255,255,.14);
     box-shadow: none;
   }
-  button:active {
-    transform: scale(0.96);
-    filter: brightness(1.1);
-  }
   .hidden { display: none !important; }
   @media (max-width: 720px) {
     .cards { grid-template-columns: 1fr; }
@@ -149,9 +149,9 @@
 
 <div id="menu" class="overlay">
   <div class="panel">
-    <h1 class="title">TRAIN<br>SURVIVOR</h1>
+    <h1 class="title">COSMO<br>SURVIVOR</h1>
     <div class="subtitle">
-      Офлайн 2D survival под поезд: управляешь человечком, монстры усиливаются, ты собираешь осколки, выбираешь апгрейды, выживаешь до 40-й волны. Управление: тач-джойстик слева, стрельба автоматическая. На ноутбуке: WASD/стрелки.
+      Офлайн 2D survival в духе аркадных survivor-игр: космо-боец, орды монстров, кристаллы опыта, апгрейды, боссы и 40 волн. Управление: тач-джойстик слева, стрельба автоматическая. На ноутбуке: WASD/стрелки.
     </div>
     <div class="row">
       <button id="startBtn">Начать забег</button>
@@ -160,7 +160,7 @@
     </div>
     <div class="hint" id="bestInfo"></div>
     <div class="hint">
-      Совет: не стой на месте. На поздних волнах без скорости, магнита и пробития тебя просто сожрут.
+      Совет: двигайся по дуге и не танкуй лицом. Лучшие старты сейчас: урон, скорострельность, магнит.
     </div>
   </div>
 </div>
@@ -168,7 +168,7 @@
 <div id="levelPanel" class="overlay hidden">
   <div class="panel">
     <h2 style="margin:0 0 6px;font-size:28px;">Выбери усиление</h2>
-    <div class="subtitle">Игра на паузе. Один выбор сейчас решает, переживешь ли следующую волну.</div>
+    <div class="subtitle">Игра на паузе. Бусты стали меньше, поэтому важна сборка, а не один имба-апгрейд.</div>
     <div id="upgradeCards" class="cards"></div>
   </div>
 </div>
@@ -222,7 +222,7 @@ const clamp = (v,a,b) => Math.max(a, Math.min(b, v));
 const dist2 = (a,b,c,d) => { const x=a-c, y=b-d; return x*x+y*y; };
 const len = (x,y) => Math.hypot(x,y) || 1;
 
-const storeKey = 'train_survivor_save_v1';
+const storeKey = 'cosmo_survivor_save_v2';
 function loadSave() {
   try { return JSON.parse(localStorage.getItem(storeKey)) || {bestWave:0,bestKills:0,bestTime:0,coins:0}; }
   catch { return {bestWave:0,bestKills:0,bestTime:0,coins:0}; }
@@ -263,29 +263,29 @@ let player = null;
 let bullets = [], enemies = [], enemyBullets = [], pickups = [], particles = [], floatTexts = [], chests = [], hazards = [];
 
 const upgrades = [
-  { id:'damage', name:'Урон +25%', desc:'Пули сильнее. Лучший выбор против танков и боссов.', max: 12, apply:p=>p.damage *= 1.25 },
-  { id:'rate', name:'Скорострельность +18%', desc:'Чаще стреляешь. Сильно раскрывается с пробитием.', max: 10, apply:p=>p.fireDelay *= 0.82 },
-  { id:'speed', name:'Скорость +14%', desc:'Проще кайтить толпу и выходить из окружения.', max: 8, apply:p=>p.speed *= 1.14 },
-  { id:'hp', name:'Макс. HP +25', desc:'Плюс выживаемость и частичное лечение.', max: 8, apply:p=>{p.maxHp += 25; p.hp = Math.min(p.maxHp, p.hp + 35);} },
-  { id:'regen', name:'Регенерация', desc:'Медленно лечит. На длинной дистанции имба.', max: 7, apply:p=>p.regen += 0.8 },
-  { id:'magnet', name:'Магнит +45%', desc:'Осколки сами летят к тебе с большей дистанции.', max: 6, apply:p=>p.magnet *= 1.45 },
-  { id:'pierce', name:'Пробитие +1', desc:'Пуля проходит через дополнительного врага.', max: 6, apply:p=>p.pierce += 1 },
-  { id:'multi', name:'Доп. снаряд', desc:'Выстреливает веером. Урон по толпе растет кратно.', max: 4, apply:p=>p.projectiles += 1 },
-  { id:'armor', name:'Броня +10%', desc:'Режет входящий урон. Позднее почти обязательно.', max: 7, apply:p=>p.armor = Math.min(.72, p.armor + .10) },
-  { id:'crit', name:'Криты +12%', desc:'Шанс нанести 2.2x урона.', max: 6, apply:p=>p.crit = Math.min(.72, p.crit + .12) },
-  { id:'bulletSpeed', name:'Скорость пуль +22%', desc:'Меньше промахов по быстрым целям.', max: 6, apply:p=>p.bulletSpeed *= 1.22 },
-  { id:'orbit', name:'Орбитальный нож', desc:'Вокруг тебя вращается клинок и режет врагов.', max: 6, apply:p=>p.orbit += 1 },
-  { id:'dash', name:'Рывок', desc:'Двойной тап по джойстику дает короткий рывок сквозь толпу.', max: 3, apply:p=>{p.dashLevel += 1; p.dashCooldown = Math.max(1.1, p.dashCooldown - .35);} },
-  { id:'luck', name:'Удача +20%', desc:'Больше аптечек, монет и сундуков.', max: 5, apply:p=>p.luck += .20 }
+  { id:'damage', name:'Урон +10%', desc:'Базовый урон выше, буст меньше. Стабильный выбор против элиты.', max: 16, apply:p=>p.damage *= 1.10 },
+  { id:'rate', name:'Скорострельность +7%', desc:'Чаще стреляешь. Хорошо с пробитием и критами.', max: 14, apply:p=>p.fireDelay *= 0.93 },
+  { id:'speed', name:'Скорость +5%', desc:'Меньше шансов попасть в окружение. Не имба, но спасает.', max: 12, apply:p=>p.speed *= 1.05 },
+  { id:'hp', name:'Макс. HP +16', desc:'Плюс здоровье и небольшое лечение.', max: 10, apply:p=>{p.maxHp += 16; p.hp = Math.min(p.maxHp, p.hp + 22);} },
+  { id:'regen', name:'Реген +0.35/с', desc:'Медленное лечение. Сильно только на длинной дистанции.', max: 10, apply:p=>p.regen += 0.35 },
+  { id:'magnet', name:'Магнит +12%', desc:'Кристаллы летят к тебе с большей дистанции.', max: 10, apply:p=>p.magnet *= 1.12 },
+  { id:'pierce', name:'Пробитие +1', desc:'Пуля проходит через еще одну цель. Сильный, но редкий буст.', max: 5, apply:p=>p.pierce += 1 },
+  { id:'multi', name:'Доп. снаряд', desc:'Веерный выстрел. Урон делится, но контроль толпы растет.', max: 4, apply:p=>{p.projectiles += 1; p.damage *= 0.94;} },
+  { id:'armor', name:'Броня +5%', desc:'Снижает входящий урон. Кап ниже, чем раньше.', max: 10, apply:p=>p.armor = Math.min(.55, p.armor + .05) },
+  { id:'crit', name:'Крит +4%', desc:'Шанс нанести 2x урона.', max: 10, apply:p=>p.crit = Math.min(.45, p.crit + .04) },
+  { id:'bulletSpeed', name:'Скорость пуль +8%', desc:'Меньше промахов по быстрым врагам.', max: 8, apply:p=>p.bulletSpeed *= 1.08 },
+  { id:'orbit', name:'Дрон-орбита', desc:'Боевой дрон режет врагов рядом с героем.', max: 6, apply:p=>p.orbit += 1 },
+  { id:'dash', name:'Рывок', desc:'Двойной тап по джойстику дает короткий рывок.', max: 3, apply:p=>{p.dashLevel += 1; p.dashCooldown = Math.max(1.05, p.dashCooldown - .25);} },
+  { id:'luck', name:'Лут +7%', desc:'Чуть больше аптечек, монет, бомб и сундуков.', max: 8, apply:p=>p.luck += .07 }
 ];
 
 function newPlayer() {
   return {
     x: world.w/2, y: world.h/2, r: 16,
-    hp: 110, maxHp: 110, speed: 215,
-    damage: 17, fireDelay: .42, fireTimer: 0,
-    bulletSpeed: 560, pierce: 0, projectiles: 1,
-    magnet: 130, armor: 0, regen: 0, crit: .05,
+    hp: 120, maxHp: 120, speed: 220,
+    damage: 22, fireDelay: .38, fireTimer: 0,
+    bulletSpeed: 610, pierce: 0, projectiles: 1,
+    magnet: 135, armor: 0, regen: 0, crit: .04,
     orbit: 0, orbitAngle: 0,
     dashLevel: 0, dashTimer: 0, dashCooldown: 1.7, dashCdLeft: 0,
     invuln: 0,
@@ -305,8 +305,8 @@ function resetRun() {
   chests = [];
   hazards = [];
   Object.assign(game, {
-    state:'playing', t:0, dt:0, wave:1, waveKills:0, waveGoal:25,
-    kills:0, coins:0, xp:0, xpNeed:18, level:1,
+    state:'playing', t:0, dt:0, wave:1, waveKills:0, waveGoal:22,
+    kills:0, coins:0, xp:0, xpNeed:16, level:1,
     spawnTimer:0, chestTimer:12, bossAlive:false, cameraShake:0,
     slowMo:0, message:'Волна 1', messageTimer:2.5, endless:false
   });
@@ -318,17 +318,16 @@ function resetRun() {
 function continueRun() { resetRun(); }
 
 function enemyStats(type, wave) {
-  const s = 1 + (wave-1) * 0.105;
-  const late = 1 + Math.max(0, wave-12) * 0.035;
-  if (type === 'rat') return {name:'Крыса', hp:24*s, speed:118+wave*2.2, dmg:9*s, r:13, xp:4, color:'#9cff71'};
-  if (type === 'hound') return {name:'Гончая', hp:32*s, speed:172+wave*3, dmg:12*s, r:12, xp:6, color:'#ffdf55'};
-  if (type === 'brute') return {name:'Бугай', hp:118*s*late, speed:78+wave, dmg:22*s, r:23, xp:16, color:'#ff735e'};
-  if (type === 'spitter') return {name:'Плевун', hp:58*s, speed:90+wave*1.3, dmg:10*s, r:16, xp:12, color:'#74b9ff', shoot:.95};
-  if (type === 'ghost') return {name:'Фантом', hp:45*s, speed:135+wave*2.5, dmg:15*s, r:14, xp:14, color:'#d79bff', phase:true};
-  if (type === 'boss') return {name:'Босс', hp:(720 + wave*175)*s, speed:54+wave*.8, dmg:30*s, r:42 + wave*.8, xp:90+wave*8, color:'#ff4fd8', boss:true, shoot:.7};
+  const s = 1 + (wave-1) * 0.088;
+  const late = 1 + Math.max(0, wave-15) * 0.028;
+  if (type === 'rat') return {name:'Блоб', hp:34*s, speed:118+wave*2.0, dmg:8*s, r:13, xp:4, color:'#7cff95'};
+  if (type === 'hound') return {name:'Скаут', hp:42*s, speed:166+wave*2.6, dmg:10*s, r:12, xp:6, color:'#ffd84f'};
+  if (type === 'brute') return {name:'Танк', hp:135*s*late, speed:76+wave*.9, dmg:20*s, r:23, xp:15, color:'#ff6f61'};
+  if (type === 'spitter') return {name:'Стрелок', hp:72*s, speed:92+wave*1.1, dmg:9*s, r:16, xp:12, color:'#55c7ff', shoot:.95};
+  if (type === 'ghost') return {name:'Фантом', hp:58*s, speed:130+wave*2.1, dmg:13*s, r:14, xp:14, color:'#c98cff', phase:true};
+  if (type === 'boss') return {name:'Босс', hp:(940 + wave*190)*s, speed:54+wave*.75, dmg:27*s, r:42 + wave*.75, xp:105+wave*8, color:'#ff46c7', boss:true, shoot:.7};
   return {name:'?', hp:50*s, speed:100, dmg:10, r:14, xp:5, color:'#fff'};
 }
-
 function pickEnemyType() {
   const w = game.wave;
   const pool = ['rat'];
@@ -373,7 +372,7 @@ function spawnBoss() {
 
 function spawnPickup(x,y,type,amount=1) {
   const cfg = {
-    xp:{r:7, color:'#69f0ff'}, heal:{r:9, color:'#65ff8a'}, coin:{r:7, color:'#ffe36a'}, bomb:{r:10, color:'#ff77ff'}
+    xp:{r:7, color:'#65d8ff'}, heal:{r:9, color:'#78ff91'}, coin:{r:7, color:'#ffe36a'}, bomb:{r:10, color:'#ff77ff'}
   }[type];
   pickups.push({x,y,type,amount,r:cfg.r,color:cfg.color,vx:rand(-45,45),vy:rand(-45,45),life:90});
 }
@@ -414,10 +413,8 @@ function pointerPos(e) {
   return {x:t.clientX, y:t.clientY};
 }
 function startTouch(e) {
+  if (e.target && e.target.closest && e.target.closest('button, .panel')) return;
   if (game.state !== 'playing') return;
-  // Don't intercept touches on UI elements
-  if (e.target.closest('button') || e.target.closest('.panel') || e.target.closest('.topButtons')) return;
-
   const p = pointerPos(e);
   if (p.x > W * .62 && p.y < 90) return;
   input.touching = true;
@@ -426,6 +423,7 @@ function startTouch(e) {
   const now = performance.now()/1000;
   if (now - input.lastTap < .28) tryDash();
   input.lastTap = now;
+  e.preventDefault();
 }
 function moveTouch(e) {
   if (!input.touching) return;
@@ -443,14 +441,15 @@ function moveTouch(e) {
   e.preventDefault();
 }
 function endTouch(e) {
+  if (!input.touching) return;
   input.touching = false;
   input.x = input.y = 0;
   e.preventDefault();
 }
-window.addEventListener('touchstart', startTouch, {passive:false});
-window.addEventListener('touchmove', moveTouch, {passive:false});
-window.addEventListener('touchend', endTouch, {passive:false});
-window.addEventListener('touchcancel', endTouch, {passive:false});
+canvas.addEventListener('touchstart', startTouch, {passive:false});
+canvas.addEventListener('touchmove', moveTouch, {passive:false});
+canvas.addEventListener('touchend', endTouch, {passive:false});
+canvas.addEventListener('touchcancel', endTouch, {passive:false});
 
 function readMove() {
   let x = input.x, y = input.y;
@@ -526,7 +525,7 @@ function damagePlayer(amount) {
 function damageEnemy(e, amount) {
   e.hp -= amount;
   e.hitFlash = .08;
-  if (Math.random() < .15) floatTexts.push({x:e.x,y:e.y-20,text:Math.round(amount).toString(),life:.45,color:'#fff'});
+  if (Math.random() < .35) floatTexts.push({x:e.x,y:e.y-20,text:Math.round(amount).toString(),life:.45,color:'#fff'});
   if (e.hp <= 0) killEnemy(e);
 }
 
@@ -592,17 +591,17 @@ function openUpgradeChoice(count=3) {
     div.innerHTML = `<h3>${u.name}</h3><p>${u.desc}</p><p>Уровень: ${current}/${u.max}</p>`;
     const b = document.createElement('button');
     b.textContent = 'Взять';
-    const applyUpgrade = (e) => {
+    const pick = () => {
       if (game.state !== 'levelup') return;
-      game.state = 'playing'; // Set state first to block double calls
       player.upgrades[u.id] = current + 1;
       u.apply(player);
       levelPanel.classList.add('hidden');
+      game.state = 'playing';
       game.message = u.name;
-      game.messageTimer = 1.4;
+      game.messageTimer = 1.35;
     };
-    div.onclick = applyUpgrade;
-    b.onclick = (e) => { e.stopPropagation(); applyUpgrade(); };
+    bindTapElement(b, pick);
+    bindTapElement(div, (ev) => { if (ev && ev.target && ev.target.tagName === 'BUTTON') return; pick(); });
     div.appendChild(b);
     upgradeCards.appendChild(div);
   }
@@ -612,13 +611,13 @@ function openUpgradeChoice(count=3) {
 function nextWave() {
   game.wave++;
   game.waveKills = 0;
-  game.waveGoal = Math.round(25 + game.wave * 7.5);
+  game.waveGoal = Math.round(22 + game.wave * 6.2);
   game.message = `Волна ${game.wave}`;
   game.messageTimer = 2;
   game.cameraShake = 7;
   openUpgradeChoice(3);
   if (game.wave % 5 === 0) setTimeout(() => { if (game.state === 'playing') spawnBoss(); }, 500);
-  if (game.wave > 40 && !game.endless) endRun(true);
+  if (game.wave > 45 && !game.endless) endRun(true);
 }
 
 function endRun(win) {
@@ -677,9 +676,9 @@ function update(dt) {
   }
 
   game.spawnTimer -= dt;
-  const spawnInterval = Math.max(.12, .82 - game.wave*.018 - Math.min(.22, game.t/600));
-  if (game.spawnTimer <= 0 && enemies.length < 75 + game.wave*2) {
-    const pack = game.wave >= 16 ? irand(1,3) : 1;
+  const spawnInterval = Math.max(.15, .86 - game.wave*.015 - Math.min(.18, game.t/700));
+  if (game.spawnTimer <= 0 && enemies.length < 62 + game.wave*2) {
+    const pack = game.wave >= 18 ? irand(1,2) : 1;
     for (let i=0;i<pack;i++) spawnEnemy(pickEnemyType());
     game.spawnTimer = spawnInterval;
   }
@@ -690,7 +689,7 @@ function update(dt) {
     game.chestTimer = rand(22, 34) / (1 + player.luck*.2);
   }
 
-  if (game.wave % 5 === 0 && !game.bossAlive && game.waveKills > game.waveGoal * .25) spawnBoss();
+  if (game.wave % 5 === 0 && !game.bossAlive && game.waveKills > game.waveGoal * .38) spawnBoss();
   if (game.waveKills >= game.waveGoal && !game.bossAlive) nextWave();
 
   updateBullets(dt);
@@ -858,32 +857,56 @@ function draw() {
 }
 
 function drawWorld(cam) {
-  ctx.fillStyle = '#0b0f16';
+  const g = ctx.createLinearGradient(cam.x, cam.y, cam.x+W, cam.y+H);
+  g.addColorStop(0, '#171c35');
+  g.addColorStop(.55, '#222b46');
+  g.addColorStop(1, '#101421');
+  ctx.fillStyle = g;
   ctx.fillRect(0,0,world.w,world.h);
-  const grid = 80;
-  const sx = Math.floor(cam.x/grid)*grid;
-  const sy = Math.floor(cam.y/grid)*grid;
-  ctx.strokeStyle = 'rgba(255,255,255,.045)';
-  ctx.lineWidth = 1;
-  for (let x=sx; x<cam.x+W+grid; x+=grid) { ctx.beginPath(); ctx.moveTo(x,cam.y-20); ctx.lineTo(x,cam.y+H+20); ctx.stroke(); }
-  for (let y=sy; y<cam.y+H+grid; y+=grid) { ctx.beginPath(); ctx.moveTo(cam.x-20,y); ctx.lineTo(cam.x+W+20,y); ctx.stroke(); }
-  ctx.strokeStyle = 'rgba(134,255,204,.10)';
-  ctx.lineWidth = 6;
-  ctx.strokeRect(0,0,world.w,world.h);
 
-  // rails as visual landmark
+  const tile = 128;
+  const sx = Math.floor(cam.x/tile)*tile;
+  const sy = Math.floor(cam.y/tile)*tile;
+  for (let x=sx; x<cam.x+W+tile; x+=tile) {
+    for (let y=sy; y<cam.y+H+tile; y+=tile) {
+      ctx.fillStyle = ((x/tile + y/tile) % 2 === 0) ? 'rgba(255,255,255,.035)' : 'rgba(0,0,0,.05)';
+      ctx.fillRect(x,y,tile,tile);
+    }
+  }
+  ctx.strokeStyle = 'rgba(255,255,255,.065)';
+  ctx.lineWidth = 1;
+  for (let x=sx; x<cam.x+W+tile; x+=tile) { ctx.beginPath(); ctx.moveTo(x,cam.y-20); ctx.lineTo(x,cam.y+H+20); ctx.stroke(); }
+  for (let y=sy; y<cam.y+H+tile; y+=tile) { ctx.beginPath(); ctx.moveTo(cam.x-20,y); ctx.lineTo(cam.x+W+20,y); ctx.stroke(); }
+
+  // sci-fi rail corridor landmark
   ctx.save();
   ctx.translate(world.w/2, world.h/2);
-  ctx.rotate(-0.32);
-  ctx.strokeStyle = 'rgba(255,255,255,.12)';
+  ctx.rotate(-0.25);
+  ctx.fillStyle = 'rgba(110,130,160,.18)';
+  ctx.fillRect(-2400,-160,4800,320);
+  ctx.strokeStyle = 'rgba(255,255,255,.20)';
   ctx.lineWidth = 5;
-  ctx.beginPath(); ctx.moveTo(-2200,-95); ctx.lineTo(2200,-95); ctx.stroke();
-  ctx.beginPath(); ctx.moveTo(-2200,95); ctx.lineTo(2200,95); ctx.stroke();
-  ctx.strokeStyle = 'rgba(255,255,255,.07)'; ctx.lineWidth = 10;
-  for (let x=-2200;x<2200;x+=95) { ctx.beginPath(); ctx.moveTo(x,-130); ctx.lineTo(x,130); ctx.stroke(); }
+  ctx.beginPath(); ctx.moveTo(-2400,-105); ctx.lineTo(2400,-105); ctx.stroke();
+  ctx.beginPath(); ctx.moveTo(-2400,105); ctx.lineTo(2400,105); ctx.stroke();
+  ctx.strokeStyle = 'rgba(123,232,255,.18)'; ctx.lineWidth = 8;
+  for (let x=-2400;x<2400;x+=120) { ctx.beginPath(); ctx.moveTo(x,-145); ctx.lineTo(x,145); ctx.stroke(); }
+  ctx.fillStyle = 'rgba(255,70,90,.18)';
+  for (let x=-2300;x<2300;x+=360) { ctx.fillRect(x,-25,165,50); }
   ctx.restore();
-}
 
+  // decorative planets / generators
+  for (let i=0;i<12;i++) {
+    const x = 260 + (i*517 % 2700);
+    const y = 260 + (i*733 % 2700);
+    ctx.globalAlpha = .16;
+    circle(x,y,34 + (i%4)*10, i%2 ? '#7be8ff' : '#ffcf5a');
+    ctx.globalAlpha = 1;
+  }
+
+  ctx.strokeStyle = 'rgba(123,232,255,.16)';
+  ctx.lineWidth = 6;
+  ctx.strokeRect(0,0,world.w,world.h);
+}
 function circle(x,y,r,fill,stroke,w=1) {
   ctx.beginPath(); ctx.arc(x,y,r,0,TAU); ctx.fillStyle = fill; ctx.fill();
   if (stroke) { ctx.strokeStyle = stroke; ctx.lineWidth = w; ctx.stroke(); }
@@ -892,29 +915,56 @@ function drawPlayer() {
   if (!player) return;
   const blink = player.invuln > 0 && Math.floor(game.t*24)%2===0;
   if (blink) return;
-  circle(player.x,player.y,player.r,'#f2f6ff','#86ffcc',3);
-  circle(player.x + player.dirX*8, player.y + player.dirY*8, 4, '#101722');
-  ctx.strokeStyle = '#86ffcc'; ctx.lineWidth = 4; ctx.lineCap = 'round';
-  ctx.beginPath(); ctx.moveTo(player.x-player.dirY*7, player.y+player.dirX*7); ctx.lineTo(player.x+player.dirX*23, player.y+player.dirY*23); ctx.stroke();
+  ctx.save();
+  ctx.translate(player.x, player.y);
+  const a = Math.atan2(player.dirY, player.dirX);
+  ctx.rotate(a);
+  circle(0,0,player.r,'#f8fbff','#7be8ff',3);
+  ctx.fillStyle = '#12182a';
+  ctx.beginPath(); ctx.roundRect(-6,-9,16,18,6); ctx.fill();
+  ctx.fillStyle = '#7be8ff';
+  ctx.fillRect(2,-7,8,14);
+  ctx.fillStyle = '#ffe36a';
+  ctx.beginPath(); ctx.roundRect(7,-5,21,10,5); ctx.fill();
+  ctx.strokeStyle = '#fff'; ctx.lineWidth = 2;
+  ctx.strokeRect(11,-3,8,6);
+  ctx.restore();
 }
 function drawEnemy(e) {
   const fill = e.hitFlash > 0 ? '#fff' : e.color;
-  circle(e.x,e.y,e.r,fill,'rgba(0,0,0,.45)',2);
-  if (e.boss) {
-    ctx.strokeStyle = 'rgba(255,79,216,.6)'; ctx.lineWidth = 4;
-    ctx.beginPath(); ctx.arc(e.x,e.y,e.r+8,0,TAU*(e.hp/e.maxHp)); ctx.stroke();
+  ctx.save();
+  ctx.translate(e.x,e.y);
+  const pulse = 1 + Math.sin(game.t*5 + e.wobble)*.04;
+  circle(0,0,e.r*pulse,fill,'rgba(0,0,0,.45)',2);
+  // small alien face, closer to arcade survival reference without copying assets
+  ctx.fillStyle = 'rgba(0,0,0,.45)';
+  circle(-e.r*.32,-e.r*.15,Math.max(2.2,e.r*.14),'rgba(0,0,0,.45)');
+  circle(e.r*.32,-e.r*.15,Math.max(2.2,e.r*.14),'rgba(0,0,0,.45)');
+  ctx.strokeStyle = 'rgba(0,0,0,.35)'; ctx.lineWidth = 2; ctx.lineCap = 'round';
+  ctx.beginPath(); ctx.moveTo(-e.r*.45,e.r*.28); ctx.lineTo(e.r*.45,e.r*.28); ctx.stroke();
+  if (e.type === 'hound') {
+    ctx.fillStyle = '#fff3'; ctx.beginPath(); ctx.moveTo(-e.r,-e.r*.7); ctx.lineTo(-e.r*.2,-e.r*1.35); ctx.lineTo(e.r*.1,-e.r*.55); ctx.fill();
   }
+  if (e.type === 'spitter') {
+    ctx.fillStyle = '#001b2a'; circle(0, e.r*.15, e.r*.28, '#001b2a');
+  }
+  if (e.type === 'ghost') {
+    ctx.strokeStyle = 'rgba(201,140,255,.45)'; ctx.lineWidth = 3;
+    ctx.beginPath(); ctx.arc(0,0,e.r+6+Math.sin(game.t*8)*2,0,TAU); ctx.stroke();
+  }
+  if (e.boss) {
+    ctx.strokeStyle = 'rgba(255,70,199,.65)'; ctx.lineWidth = 5;
+    ctx.beginPath(); ctx.arc(0,0,e.r+10,0,TAU*(e.hp/e.maxHp)); ctx.stroke();
+    ctx.fillStyle = '#fff'; ctx.font = '900 12px -apple-system, BlinkMacSystemFont, Segoe UI, Arial'; ctx.textAlign='center';
+    ctx.fillText('BOSS',0,-e.r-24);
+  }
+  ctx.restore();
   ctx.fillStyle = 'rgba(0,0,0,.35)';
   ctx.fillRect(e.x-e.r, e.y-e.r-10, e.r*2, 4);
-  ctx.fillStyle = e.boss ? '#ff4fd8' : '#86ffcc';
+  ctx.fillStyle = e.boss ? '#ff46c7' : '#8dffb2';
   ctx.fillRect(e.x-e.r, e.y-e.r-10, e.r*2*clamp(e.hp/e.maxHp,0,1), 4);
-  if (e.type === 'spitter') circle(e.x+Math.sin(e.wobble)*5, e.y-2, e.r*.25, '#001b2a');
-  if (e.type === 'ghost') {
-    ctx.strokeStyle = 'rgba(215,155,255,.35)'; ctx.lineWidth = 3;
-    ctx.beginPath(); ctx.arc(e.x,e.y,e.r+6+Math.sin(game.t*8)*2,0,TAU); ctx.stroke();
-  }
 }
-function drawBullet(b) { circle(b.x,b.y,b.r,b.crit?'#fff47a':'#eaff9c'); }
+function drawBullet(b) { circle(b.x,b.y,b.r,b.crit?'#fff47a':'#7be8ff','#ffffff55',1); }
 function drawEnemyBullet(b) { circle(b.x,b.y,b.r,b.color,'rgba(255,255,255,.25)',1); }
 function drawPickup(p) {
   const pulse = 1 + Math.sin(game.t*8 + p.x*.01)*.12;
@@ -956,7 +1006,7 @@ function drawUI() {
   ctx.fillStyle = 'rgba(0,0,0,.38)';
   ctx.beginPath(); ctx.roundRect(pad, pad + (window.visualViewport ? 0 : 0), Math.min(350,W-28), 92, 18); ctx.fill();
   const x = pad+14, y = pad+13;
-  ctx.fillStyle = '#fff'; ctx.fillText(`Волна ${game.wave}/40   LVL ${game.level}`, x, y);
+  ctx.fillStyle = '#fff'; ctx.fillText(`Волна ${game.wave}/45   LVL ${game.level}`, x, y);
   if (player) bar(x, y+30, Math.min(280,W-65), 12, player.hp/player.maxHp, '#ff6464', 'HP');
   bar(x, y+50, Math.min(280,W-65), 9, game.xp/game.xpNeed, '#69f0ff', 'XP');
   ctx.fillStyle = 'rgba(255,255,255,.78)'; ctx.font = '800 13px -apple-system, BlinkMacSystemFont, Segoe UI, Arial';
@@ -1013,14 +1063,25 @@ function loop(now) {
 requestAnimationFrame(loop);
 
 // UI buttons - hardened for iPhone local HTML viewers
-function bindTap(id, fn) {
-  const el = document.getElementById(id);
+function bindTapElement(el, fn) {
   if (!el) return;
+  let lastRun = 0;
   const run = (e) => {
+    const now = performance.now();
+    if (now - lastRun < 180) return;
+    lastRun = now;
+    if (e) {
+      e.preventDefault();
+      e.stopPropagation();
+    }
     fn();
   };
   el.onclick = run;
+  el.addEventListener('click', run, {passive:false});
+  el.addEventListener('touchend', run, {passive:false});
+  el.addEventListener('pointerup', run, {passive:false});
 }
+function bindTap(id, fn) { bindTapElement(document.getElementById(id), fn); }
 
 window.addEventListener('error', (e) => {
   const old = document.getElementById('debugErrorBox');
@@ -1048,11 +1109,9 @@ if (!CanvasRenderingContext2D.prototype.roundRect) {
   };
 }
 
-// Register service worker for PWA/Offline support
-if ('serviceWorker' in navigator) {
-  window.addEventListener('load', () => {
-    navigator.serviceWorker.register('./sw.js').catch(err => console.log('SW registration failed:', err));
-  });
+
+if ('serviceWorker' in navigator && location.protocol.startsWith('http')) {
+  window.addEventListener('load', () => navigator.serviceWorker.register('./sw.js').catch(()=>{}));
 }
 
 })();

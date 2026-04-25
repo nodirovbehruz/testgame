@@ -1,0 +1,10 @@
+{
+  "name": "Train Survivor Offline",
+  "short_name": "Train Survivor",
+  "start_url": "./index.html",
+  "display": "fullscreen",
+  "orientation": "any",
+  "background_color": "#080b10",
+  "theme_color": "#080b10",
+  "description": "Offline 2D survival game for train travel"
+}

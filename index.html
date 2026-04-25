@@ -49,7 +49,6 @@
     border-radius: 24px;
     padding: 22px;
     box-sizing: border-box;
-    backdrop-filter: blur(14px);
   }
   .title {
     font-size: clamp(30px, 7vw, 58px);
@@ -594,16 +593,16 @@ function openUpgradeChoice(count=3) {
     const b = document.createElement('button');
     b.textContent = 'Взять';
     const applyUpgrade = (e) => {
-      if (e) { e.preventDefault(); e.stopPropagation(); }
       if (game.state !== 'levelup') return;
+      game.state = 'playing'; // Set state first to block double calls
       player.upgrades[u.id] = current + 1;
       u.apply(player);
       levelPanel.classList.add('hidden');
-      game.state = 'playing';
       game.message = u.name;
       game.messageTimer = 1.4;
     };
-    b.onpointerdown = applyUpgrade;
+    div.onclick = applyUpgrade;
+    b.onclick = (e) => { e.stopPropagation(); applyUpgrade(); };
     div.appendChild(b);
     upgradeCards.appendChild(div);
   }
@@ -1017,15 +1016,10 @@ requestAnimationFrame(loop);
 function bindTap(id, fn) {
   const el = document.getElementById(id);
   if (!el) return;
-  let lastRun = 0;
   const run = (e) => {
-    if (e) { e.preventDefault(); e.stopPropagation(); }
-    const now = performance.now();
-    if (now - lastRun < 180) return;
-    lastRun = now;
     fn();
   };
-  el.onpointerdown = run;
+  el.onclick = run;
 }
 
 window.addEventListener('error', (e) => {

@@ -412,6 +412,9 @@ function pointerPos(e) {
 }
 function startTouch(e) {
   if (game.state !== 'playing') return;
+  // Don't intercept touches on buttons or menu panels
+  if (e.target.closest('button') || e.target.closest('.panel')) return;
+
   const p = pointerPos(e);
   if (p.x > W * .62 && p.y < 90) return;
   input.touching = true;
@@ -420,7 +423,7 @@ function startTouch(e) {
   const now = performance.now()/1000;
   if (now - input.lastTap < .28) tryDash();
   input.lastTap = now;
-  e.preventDefault();
+  if (e.cancelable) e.preventDefault();
 }
 function moveTouch(e) {
   if (!input.touching) return;
@@ -587,7 +590,8 @@ function openUpgradeChoice(count=3) {
     div.innerHTML = `<h3>${u.name}</h3><p>${u.desc}</p><p>Уровень: ${current}/${u.max}</p>`;
     const b = document.createElement('button');
     b.textContent = 'Взять';
-    b.onclick = () => {
+    const applyUpgrade = () => {
+      if (game.state !== 'levelup') return;
       player.upgrades[u.id] = current + 1;
       u.apply(player);
       levelPanel.classList.add('hidden');
@@ -595,6 +599,8 @@ function openUpgradeChoice(count=3) {
       game.message = u.name;
       game.messageTimer = 1.4;
     };
+    b.onclick = applyUpgrade;
+    b.addEventListener('touchend', (e) => { e.preventDefault(); applyUpgrade(); }, {passive:false});
     div.appendChild(b);
     upgradeCards.appendChild(div);
   }
